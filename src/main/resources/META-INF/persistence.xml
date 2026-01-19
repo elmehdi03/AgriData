@@ -1,0 +1,21 @@
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence" version="3.0">
+    <persistence-unit name="agridataPU" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <class>com.agriiot.agridata.model.Capteur</class>
+        <class>com.agriiot.agridata.model.Mesure</class>
+        <properties>
+            <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/agridata?createDatabaseIfNotExist=true&amp;serverTimezone=UTC&amp;useSSL=false&amp;allowPublicKeyRetrieval=true"/>
+            <property name="jakarta.persistence.jdbc.user" value="agridata_user"/>
+            <property name="jakarta.persistence.jdbc.password" value="agridata_pwd"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="hibernate.show_sql" value="false"/>
+            <property name="hibernate.format_sql" value="false"/>
+            <property name="hibernate.connection.provider_class" value="com.zaxxer.hikari.hibernate.HikariConnectionProvider"/>
+            <property name="hibernate.hikari.maximumPoolSize" value="10"/>
+            <property name="hibernate.jdbc.batch_size" value="50"/>
+            <property name="hibernate.order_inserts" value="true"/>
+        </properties>
+    </persistence-unit>
+</persistence>
