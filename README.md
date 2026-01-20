@@ -55,37 +55,29 @@ Le script fait TOUT automatiquement :
 
 ## 🗄️ Base de Données MySQL (Docker)
 
-Le script crée automatiquement un conteneur MySQL avec :
+Le script crée automatiquement un conteneur MySQL.
 
-```
-Conteneur : agridata-mysql
-Host : localhost
-Port : 3307 (externe) -> 3306 (interne)
-Database : agridata
-User : agridata_user
-Password : agridata_pwd
-Root Password : agridata_root
-```
+**Configuration** :
+- Conteneur : `agridata-mysql`
+- Host : `localhost`
+- Port : `3307` (externe) → `3306` (interne)
+- Database : `agridata`
+
+**Note** : Les credentials sont définis dans `run-app.bat` et `persistence.xml` (à usage local uniquement).
 
 ### Accéder à MySQL
 
 ```bash
-# Depuis votre machine
-mysql -h 127.0.0.1 -P 3307 -u agridata_user -pagridata_pwd agridata
+# Depuis Docker (sans exposer les credentials)
+docker exec -it agridata-mysql mysql agridata
 
-# Depuis Docker
-docker exec -it agridata-mysql mysql -u agridata_user -pagridata_pwd agridata
+# Ou voir les logs
+docker logs agridata-mysql
 ```
 
 ## 🔄 Régénérer les Données
 
 Depuis l'interface web, cliquez sur le bouton **"🔄 Régénérer les Données"** sur la page d'accueil.
-
-Ou manuellement :
-```bash
-docker exec agridata-mysql mysql -u root -pagridata_root agridata -e "TRUNCATE TABLE Mesure; DELETE FROM Capteur;"
-java -cp "target/agridata/WEB-INF/classes;target/agridata/WEB-INF/lib/*" com.agriiot.agridata.util.DataGenerator
-```
 
 ## 🛑 Arrêter l'Application
 
@@ -96,14 +88,12 @@ java -cp "target/agridata/WEB-INF/classes;target/agridata/WEB-INF/lib/*" com.agr
 
 ### Docker n'est pas lancé
 ```bash
-# Lancer Docker Desktop depuis le menu Démarrer
-# Ou vérifier :
 docker info
 ```
+Si erreur, lancez Docker Desktop depuis le menu Démarrer.
 
 ### Port 3307 déjà utilisé
 ```bash
-# Arrêter le conteneur existant
 docker stop agridata-mysql
 docker rm agridata-mysql
 ```
@@ -132,10 +122,19 @@ Le générateur crée automatiquement :
 - **5 capteurs** (Température, Humidité, pH, Luminosité, Pression)
 - **5000 mesures** réparties sur 30 jours
 
+## 🔒 Sécurité
+
+**Important** : Ce projet est conçu pour le développement local uniquement.
+- Les credentials MySQL sont stockés en clair dans les fichiers de configuration
+- **Ne jamais** déployer en production sans :
+  - Utiliser des variables d'environnement pour les credentials
+  - Configurer un reverse proxy (nginx/Apache)
+  - Activer SSL/TLS
+  - Utiliser un gestionnaire de secrets (Vault, etc.)
+
 ## 🎉 C'est Prêt !
 
 ```bash
-# Une seule commande pour tout lancer :
 run-app.bat
 ```
 
