@@ -22,4 +22,11 @@ public class CapteurDao {
         em.close();
         return c;
     }
+
+    public long compterCapteurs() {
+        EntityManager em = JpaUtil.getEntityManager();
+        Long count = em.createQuery("SELECT COUNT(c) FROM Capteur c", Long.class).getSingleResult();
+        em.close();
+        return count;
+    }
 }

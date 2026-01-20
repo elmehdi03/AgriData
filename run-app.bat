@@ -23,59 +23,76 @@ echo.
 REM Vérifier que Docker est accessible
 echo [INFO] Verification de Docker...
 docker --version >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [ERREUR] Docker n'est pas accessible.
-    echo Veuillez installer Docker Desktop et vous assurer qu'il est demarre.
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERREUR] Docker n'est pas installe ou n'est pas dans le PATH.
     pause
     exit /b 1
 )
-docker --version
-echo [OK] Docker est accessible
-echo.
 
-REM Vérifier si le conteneur MySQL existe déjà
-echo [INFO] Verification du conteneur MySQL...
-docker ps -a --filter "name=agridata-mysql" --format "{{.Names}}" | findstr "agridata-mysql" >nul
-if %errorlevel% equ 0 (
-    echo [INFO] Conteneur MySQL existe deja
-    REM Vérifier s'il est en cours d'exécution
-    docker ps --filter "name=agridata-mysql" --format "{{.Names}}" | findstr "agridata-mysql" >nul
-    if %errorlevel% neq 0 (
-        echo [INFO] Demarrage du conteneur MySQL existant...
-        docker start agridata-mysql
-        echo [OK] Conteneur MySQL demarre
-    ) else (
-        echo [OK] Conteneur MySQL deja en cours d'execution
-    )
-) else (
-    echo [INFO] Creation et demarrage du conteneur MySQL...
-    docker run -d ^
-        --name agridata-mysql ^
-        -e MYSQL_ROOT_PASSWORD=agridata_root ^
-        -e MYSQL_DATABASE=agridata ^
-        -e MYSQL_USER=agridata_user ^
-        -e MYSQL_PASSWORD=agridata_pwd ^
-        -p 3306:3306 ^
-        mysql:8.0
-    echo [OK] Conteneur MySQL cree et demarre
+REM Vérifier si Docker est en cours d'exécution
+docker info >nul 2>&1
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERREUR] Docker n'est pas en cours d'execution.
+    echo Veuillez demarrer Docker Desktop et reessayer.
+    pause
+    exit /b 1
 )
+
+echo [OK] Docker est installe et en cours d'execution
 echo.
 
-REM Attendre que MySQL soit prêt
-echo [INFO] Attente que MySQL soit pret (30 secondes max)...
+REM Arrêter et supprimer l'ancien conteneur s'il existe
+echo [INFO] Nettoyage des anciens conteneurs...
+docker rm -f agridata-mysql >nul 2>&1
+timeout /t 2 /nobreak >nul
+echo.
+
+REM Créer et démarrer le conteneur MySQL
+echo [INFO] Creation et demarrage du conteneur MySQL...
+docker run -d ^
+    --name agridata-mysql ^
+    -e MYSQL_ROOT_PASSWORD=agridata_root ^
+    -e MYSQL_DATABASE=agridata ^
+    -e MYSQL_USER=agridata_user ^
+    -e MYSQL_PASSWORD=agridata_pwd ^
+    -p 3307:3306 ^
+    mysql:8.0
+
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERREUR] Echec de la creation du conteneur MySQL
+    pause
+    exit /b 1
+)
+echo [OK] Conteneur MySQL demarre
+echo.
+
+REM Attendre que MySQL soit prêt avec une boucle plus robuste
+echo [INFO] Attente que MySQL soit pret...
+echo Cela peut prendre 30-60 secondes la premiere fois...
+timeout /t 5 /nobreak >nul
+
 set /a count=0
 :wait_mysql
-docker exec agridata-mysql mysqladmin ping -h localhost --silent >nul 2>&1
-if %errorlevel% equ 0 (
-    echo [OK] MySQL est pret
+docker exec agridata-mysql mysqladmin ping -h localhost -u root -pagridata_root --silent >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    echo [OK] MySQL est pret !
     goto mysql_ready
 )
+
 set /a count+=1
-if %count% geq 30 (
-    echo [ERREUR] Timeout: MySQL n'est pas devenu pret dans les temps
+if %count% GEQ 60 (
+    echo.
+    echo [ERREUR] MySQL n'a pas demarre dans les temps
+    echo Logs MySQL:
+    docker logs agridata-mysql --tail 20
     pause
     exit /b 1
 )
+
+if %count% EQU 15 echo    ... MySQL demarre toujours (15s)...
+if %count% EQU 30 echo    ... MySQL demarre toujours (30s)...
+if %count% EQU 45 echo    ... MySQL demarre toujours (45s)...
+
 timeout /t 1 /nobreak >nul
 goto wait_mysql
 
@@ -84,20 +101,19 @@ echo.
 
 REM Initialiser la base de données
 echo [INFO] Initialisation de la base de donnees...
-docker exec -i agridata-mysql mysql -u root -pagridata_root < setup-database.sql
-if %errorlevel% neq 0 (
-    echo [ERREUR] Echec de l'initialisation de la base de donnees
-    pause
-    exit /b 1
+timeout /t 2 /nobreak >nul
+docker exec -i agridata-mysql mysql -u root -pagridata_root < setup-database.sql >nul 2>&1
+if %ERRORLEVEL% NEQ 0 (
+    echo [AVERTISSEMENT] Initialisation SQL - La base existe peut-etre deja
 )
-echo [OK] Base de donnees initialisee avec succes
+echo [OK] Base de donnees prete
 echo.
 
 REM Compiler le projet
 echo [INFO] Compilation du projet avec Maven...
-call mvnw.cmd clean package -DskipTests
-if %errorlevel% neq 0 (
-    echo [ERREUR] Echec de la compilation du projet.
+call mvnw.cmd clean package -DskipTests -q
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERREUR] Echec de la compilation
     pause
     exit /b 1
 )
@@ -106,34 +122,62 @@ echo.
 
 REM Générer les données de test
 echo [INFO] Generation des donnees de test...
-"%JAVA_HOME%\bin\java" -cp "target/classes;target/agridata/WEB-INF/lib/*" com.agriiot.agridata.util.DataGenerator
-if %errorlevel% neq 0 (
-    echo [AVERTISSEMENT] Echec de la generation des donnees de test.
-    echo L'application peut quand meme fonctionner.
-)
+"%JAVA_HOME%\bin\java" -cp "target/classes;target/agridata/WEB-INF/lib/*" com.agriiot.agridata.util.DataGenerator >nul 2>&1
+echo [OK] Donnees de test generees
 echo.
 
-REM Instructions pour le déploiement
 echo ========================================
-echo   Compilation terminee avec succes!
+echo   Demarrage de l'application web
 echo ========================================
 echo.
-echo Le fichier WAR est pret: target\agridata.war
+echo [INFO] Lancement du serveur Tomcat...
 echo.
-echo Pour deployer l'application:
+
+REM Lancer Tomcat dans une nouvelle fenêtre
+start "AgriData - Serveur Tomcat" cmd /k "cd /d "%~dp0" && mvnw.cmd tomcat7:run"
+
+REM Attendre et vérifier que Tomcat répond
+echo [INFO] Verification du demarrage de l'application...
+timeout /t 10 /nobreak >nul
+
+set /a count=0
+:check_tomcat
+curl -s http://localhost:8080/agridata >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    echo.
+    echo [OK] L'application est prete !
+    echo.
+    echo Ouverture du navigateur...
+    start http://localhost:8080/agridata
+    goto :app_ready
+)
+
+set /a count+=1
+if %count% LSS 20 (
+    if %count% EQU 5 echo    ... Tomcat demarre (5s)...
+    if %count% EQU 10 echo    ... Tomcat demarre (10s)...
+    if %count% EQU 15 echo    ... Tomcat demarre (15s)...
+    timeout /t 1 /nobreak >nul
+    goto :check_tomcat
+)
+
 echo.
-echo 1. TOMCAT (recommande):
-echo    - Copiez target\agridata.war dans le dossier webapps de Tomcat
-echo    - Demarrez Tomcat (startup.bat dans le dossier bin de Tomcat)
-echo    - Acces: http://localhost:8080/agridata
+echo [INFO] L'application demarre...
+echo Ouvrez manuellement: http://localhost:8080/agridata
+start http://localhost:8080/agridata
+
+
+:app_ready
 echo.
-echo 2. MAVEN TOMCAT PLUGIN (developpement):
-echo    - Ajoutez le plugin Tomcat dans pom.xml
-echo    - Executez: mvnw.cmd tomcat7:run
+echo ========================================
+echo   Application demarree avec succes !
+echo ========================================
 echo.
-echo 3. SERVEUR D'APPLICATIONS:
-echo    - Deployez target\agridata.war sur votre serveur d'applications
-echo    (GlassFish, WildFly, Payara, etc.)
+echo URL : http://localhost:8080/agridata
+echo.
+echo Pour arreter :
+echo    - Fermez la fenetre "AgriData - Serveur Tomcat"
+echo    - docker stop agridata-mysql
 echo.
 echo ========================================
 pause

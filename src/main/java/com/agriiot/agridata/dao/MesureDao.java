@@ -19,4 +19,11 @@ public class MesureDao {
         em.close();
         return results;
     }
+
+    public long compterMesures() {
+        EntityManager em = JpaUtil.getEntityManager();
+        Long count = em.createQuery("SELECT COUNT(m) FROM Mesure m", Long.class).getSingleResult();
+        em.close();
+        return count;
+    }
 }

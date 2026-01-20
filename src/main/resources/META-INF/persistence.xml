@@ -5,7 +5,7 @@
         <class>com.agriiot.agridata.model.Mesure</class>
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
-            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/agridata?createDatabaseIfNotExist=true&amp;serverTimezone=UTC&amp;useSSL=false&amp;allowPublicKeyRetrieval=true"/>
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3307/agridata?createDatabaseIfNotExist=true&amp;serverTimezone=UTC&amp;useSSL=false&amp;allowPublicKeyRetrieval=true"/>
             <property name="jakarta.persistence.jdbc.user" value="agridata_user"/>
             <property name="jakarta.persistence.jdbc.password" value="agridata_pwd"/>
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>

@@ -9,6 +9,8 @@ public class Capteur {
     private String nom;
     private String type;
     private String localisation;
+    private String statut = "ACTIF";
+
     @OneToMany(mappedBy = "capteur", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Mesure> mesures;
     public Capteur() {}
@@ -24,6 +26,8 @@ public class Capteur {
     public void setType(String type) { this.type = type; }
     public String getLocalisation() { return localisation; }
     public void setLocalisation(String localisation) { this.localisation = localisation; }
+    public String getStatut() { return statut; }
+    public void setStatut(String statut) { this.statut = statut; }
     public List<Mesure> getMesures() { return mesures; }
     public void setMesures(List<Mesure> mesures) { this.mesures = mesures; }
 }

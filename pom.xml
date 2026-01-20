@@ -53,5 +53,42 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
     </dependencies>
     <build>
         <finalName>agridata</finalName>
+        <plugins>
+            <!-- Plugin Tomcat Maven pour démarrer l'application -->
+            <plugin>
+                <groupId>org.apache.tomcat.maven</groupId>
+                <artifactId>tomcat7-maven-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <port>8080</port>
+                    <path>/agridata</path>
+                    <charset>UTF-8</charset>
+                </configuration>
+            </plugin>
+            <!-- Plugin Cargo pour déploiement alternatif -->
+            <plugin>
+                <groupId>org.codehaus.cargo</groupId>
+                <artifactId>cargo-maven3-plugin</artifactId>
+                <version>1.10.10</version>
+                <configuration>
+                    <container>
+                        <containerId>tomcat10x</containerId>
+                        <type>embedded</type>
+                    </container>
+                    <configuration>
+                        <properties>
+                            <cargo.servlet.port>8080</cargo.servlet.port>
+                        </properties>
+                    </configuration>
+                    <deployables>
+                        <deployable>
+                            <properties>
+                                <context>agridata</context>
+                            </properties>
+                        </deployable>
+                    </deployables>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 </project>
