@@ -1,6 +1,147 @@
 # AgriData - Application IoT Agricole
 
-Application web JEE pour la gestion et l'analyse des données de capteurs agricoles.
+Système de gestion des données de capteurs IoT pour l'agriculture.
+
+## 🚀 Démarrage Ultra-Rapide
+
+**Double-cliquez sur `run-app.bat` - C'est tout !**
+
+Le script fait TOUT automatiquement :
+- ✅ Vérifie Docker et Java
+- ✅ Crée et démarre MySQL dans Docker (port 3307)
+- ✅ Initialise la base de données
+- ✅ Compile le projet
+- ✅ Génère 5 capteurs et 5000 mesures de test
+- ✅ Lance Tomcat 10 avec l'application
+- ✅ Ouvre le navigateur automatiquement
+
+## 📋 Prérequis
+
+- **Java 17+** avec JAVA_HOME défini
+- **Docker Desktop** installé et lancé
+- **Windows** (le script batch est pour Windows)
+
+## 🎯 URLs de l'Application
+
+- **Page d'accueil** : http://localhost:8080/agridata
+- **Liste des capteurs** : http://localhost:8080/agridata/capteurs.jsp
+- **Statistiques des mesures** : http://localhost:8080/agridata/mesures.jsp
+- **API Stats (JSON)** : http://localhost:8080/agridata/api/stats
+
+## 🔧 Architecture
+
+```
+├── Service Layer (Logique métier)
+│   └── DataService.java - Centralise toute la logique
+│
+├── DAO Layer (Accès données)
+│   ├── CapteurDao.java - CRUD capteurs
+│   ├── MesureDao.java - CRUD mesures
+│   └── JpaUtil.java - Gestion EntityManager
+│
+├── Servlet Layer (API REST)
+│   ├── StatsServlet.java - GET /api/stats
+│   └── RegenerateDataServlet.java - POST /api/regenerate
+│
+├── Model Layer (Entités JPA)
+│   ├── Capteur.java
+│   └── Mesure.java
+│
+└── View Layer (JSP)
+    ├── index.html - Page d'accueil
+    ├── capteurs.jsp - Liste des capteurs
+    └── mesures.jsp - Statistiques
+```
+
+## 🗄️ Base de Données MySQL (Docker)
+
+Le script crée automatiquement un conteneur MySQL avec :
+
+```
+Conteneur : agridata-mysql
+Host : localhost
+Port : 3307 (externe) -> 3306 (interne)
+Database : agridata
+User : agridata_user
+Password : agridata_pwd
+Root Password : agridata_root
+```
+
+### Accéder à MySQL
+
+```bash
+# Depuis votre machine
+mysql -h 127.0.0.1 -P 3307 -u agridata_user -pagridata_pwd agridata
+
+# Depuis Docker
+docker exec -it agridata-mysql mysql -u agridata_user -pagridata_pwd agridata
+```
+
+## 🔄 Régénérer les Données
+
+Depuis l'interface web, cliquez sur le bouton **"🔄 Régénérer les Données"** sur la page d'accueil.
+
+Ou manuellement :
+```bash
+docker exec agridata-mysql mysql -u root -pagridata_root agridata -e "TRUNCATE TABLE Mesure; DELETE FROM Capteur;"
+java -cp "target/agridata/WEB-INF/classes;target/agridata/WEB-INF/lib/*" com.agriiot.agridata.util.DataGenerator
+```
+
+## 🛑 Arrêter l'Application
+
+1. Fermez la fenêtre "AgriData - Serveur Tomcat" (ou Ctrl+C dedans)
+2. Arrêtez MySQL : `docker stop agridata-mysql`
+
+## 🐛 Dépannage
+
+### Docker n'est pas lancé
+```bash
+# Lancer Docker Desktop depuis le menu Démarrer
+# Ou vérifier :
+docker info
+```
+
+### Port 3307 déjà utilisé
+```bash
+# Arrêter le conteneur existant
+docker stop agridata-mysql
+docker rm agridata-mysql
+```
+
+### Tomcat ne démarre pas
+- Attendez 1-2 minutes la première fois (Cargo télécharge Tomcat 10)
+- Vérifiez les logs dans la fenêtre cmd qui s'ouvre
+- Vérifiez que le port 8080 est libre : `netstat -ano | findstr :8080`
+
+### Recompiler manuellement
+```bash
+mvnw.cmd clean package -DskipTests
+```
+
+## 📦 Technologies
+
+- **Backend** : Java 17, Jakarta EE 10, Hibernate 6.4
+- **Base de données** : MySQL 8.0 (Docker)
+- **Serveur** : Tomcat 10 (via Cargo Maven Plugin)
+- **Build** : Maven
+- **Frontend** : HTML, CSS, JavaScript, JSP
+
+## 📊 Données Générées
+
+Le générateur crée automatiquement :
+- **5 capteurs** (Température, Humidité, pH, Luminosité, Pression)
+- **5000 mesures** réparties sur 30 jours
+
+## 🎉 C'est Prêt !
+
+```bash
+# Une seule commande pour tout lancer :
+run-app.bat
+```
+
+Attendez que le navigateur s'ouvre automatiquement sur http://localhost:8080/agridata
+
+**Bon développement ! 🚀**
 
 ## 📋 Prérequis
 

@@ -1,10 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="com.agriiot.agridata.model.Capteur" %>
-<%@ page import="com.agriiot.agridata.dao.CapteurDao" %>
+<%@ page import="com.agriiot.agridata.service.DataService" %>
 <%
-    CapteurDao dao = new CapteurDao();
-    List<Capteur> capteurs = dao.findAll();
+    DataService dataService = new DataService();
+    List<Capteur> capteurs = dataService.getAllCapteurs();
 %>
 <!DOCTYPE html>
 <html lang="fr">

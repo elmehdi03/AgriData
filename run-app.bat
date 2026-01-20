@@ -134,7 +134,7 @@ echo [INFO] Lancement du serveur Tomcat...
 echo.
 
 REM Lancer Tomcat dans une nouvelle fenêtre
-start "AgriData - Serveur Tomcat" cmd /k "cd /d "%~dp0" && mvnw.cmd tomcat7:run"
+start "AgriData - Serveur Tomcat" cmd /k "cd /d "%~dp0" && mvnw.cmd cargo:run"
 
 REM Attendre et vérifier que Tomcat répond
 echo [INFO] Verification du demarrage de l'application...

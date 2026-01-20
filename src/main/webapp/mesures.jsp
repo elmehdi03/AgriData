@@ -1,9 +1,9 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
-<%@ page import="com.agriiot.agridata.dao.MesureDao" %>
+<%@ page import="com.agriiot.agridata.service.DataService" %>
 <%
-    MesureDao dao = new MesureDao();
-    List<Object[]> stats = dao.getStatsByType();
+    DataService dataService = new DataService();
+    List<Object[]> stats = dataService.getStatsByType();
 %>
 <!DOCTYPE html>
 <html lang="fr">

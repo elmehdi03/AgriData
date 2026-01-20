@@ -1,7 +1,6 @@
 package com.agriiot.agridata.servlet;
 
-import com.agriiot.agridata.dao.CapteurDao;
-import com.agriiot.agridata.dao.MesureDao;
+import com.agriiot.agridata.service.DataService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -13,8 +12,7 @@ import java.io.IOException;
 @WebServlet("/api/stats")
 public class StatsServlet extends HttpServlet {
 
-    private final CapteurDao capteurDao = new CapteurDao();
-    private final MesureDao mesureDao = new MesureDao();
+    private final DataService dataService = new DataService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -24,8 +22,8 @@ public class StatsServlet extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
 
         try {
-            long nbCapteurs = capteurDao.compterCapteurs();
-            long nbMesures = mesureDao.compterMesures();
+            long nbCapteurs = dataService.countCapteurs();
+            long nbMesures = dataService.countMesures();
 
             String json = String.format(
                 "{\"capteurs\": %d, \"mesures\": %d}",
